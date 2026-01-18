@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "rootDir": "ts",
+    "outDir": "./dist",
+
+    "target": "ES2019",
+    "module": "None",
+
+    "lib": ["DOM", "ES2019"],
+
+    "sourceMap": true,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+
+    "skipLibCheck": true
+  }
+}

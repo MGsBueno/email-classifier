@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+python-multipart
+pydantic
+pydantic-settings
+scikit-learn
+pdfplumber
+
+# testes (pra seu CI e pra rodar local)
+pytest
+httpx
+
+# usado no teste que cria PDF fake
+reportlab

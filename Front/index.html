@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Classificação de E-mails</title>
+    <link rel="icon" href="data:," />
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/styles.css" />
+
+    <!-- Script -->
+    <script src="dist/email-classifier.js" defer></script>
+  </head>
+
+  <body>
+    <div class="container">
+      <header>
+        <h1>📧 Classificação de E-mails</h1>
+        <p>
+          Envie um email e descubra automaticamente se ele é produtivo ou não.
+        </p>
+      </header>
+
+      <form autocomplete="off">
+        <!-- Upload -->
+        <div>
+          <label for="emailFile">Upload de arquivo (.txt ou .pdf)</label>
+          <input type="file" id="emailFile" accept=".txt,.pdf" />
+
+          <button type="button" id="cancelarArquivo" style="display: none">
+            ❌ Remover arquivo
+          </button>
+        </div>
+
+        <br />
+
+        <!-- Texto -->
+        <div>
+          <label for="body_email">Ou cole o texto do email</label>
+          <textarea
+            id="body_email"
+            rows="6"
+            placeholder="Cole aqui o conteúdo do email..."
+          ></textarea>
+        </div>
+
+        <div class="actions">
+          <input type="submit" value="Confirmar" />
+          <!-- <button type="button" id="testarCards">Testar Cards</button> -->
+        </div>
+      </form>
+
+      <!-- Resultado -->
+      <section id="cards" aria-live="polite">
+        <p class="placeholder">
+          Nenhum email analisado ainda. Envie um conteúdo acima 👆
+        </p>
+      </section>
+
+      <p class="footer">
+        <em>
+          Classificação gerada automaticamente com base no conteúdo do email.
+        </em>
+      </p>
+    </div>
+  </body>
+</html>
