@@ -1,19 +1,19 @@
 "use strict";
-const API_BASE = "http://localhost:8000";
+const API_BASE = "";
 // Helpers
 function escapeHtml(s) {
-    return s
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 function renderizarLoading(cardsContainer) {
-    cardsContainer.innerHTML = `<p class="loading">🔎 Analisando...</p>`;
+  cardsContainer.innerHTML = `<p class="loading">🔎 Analisando...</p>`;
 }
 function renderizarErro(cardsContainer, msg) {
-    cardsContainer.innerHTML = `
+  cardsContainer.innerHTML = `
     <div class="card improdutivo">
       <span class="badge">Erro</span>
       <h3>Não foi possível analisar</h3>
@@ -22,8 +22,8 @@ function renderizarErro(cardsContainer, msg) {
   `;
 }
 function gerarCard(r) {
-    const classe = r.classificacao === "Produtivo" ? "produtivo" : "improdutivo";
-    return `
+  const classe = r.classificacao === "Produtivo" ? "produtivo" : "improdutivo";
+  return `
     <div class="card ${classe}">
       <span class="badge">${r.classificacao}</span>
       <h3>${r.classificacao}</h3>
@@ -38,147 +38,158 @@ function gerarCard(r) {
   `;
 }
 function configurarCopiar() {
-    document.querySelectorAll(".btn-copiar").forEach((b) => {
-        b.onclick = async () => {
-            const texto = decodeURIComponent(b.dataset.resposta || "");
-            await navigator.clipboard.writeText(texto);
-            b.textContent = "✅ Copiado!";
-            setTimeout(() => (b.textContent = "📋 Copiar resposta"), 1500);
-        };
-    });
+  document.querySelectorAll(".btn-copiar").forEach((b) => {
+    b.onclick = async () => {
+      const texto = decodeURIComponent(b.dataset.resposta || "");
+      await navigator.clipboard.writeText(texto);
+      b.textContent = "✅ Copiado!";
+      setTimeout(() => (b.textContent = "📋 Copiar resposta"), 1500);
+    };
+  });
 }
 function renderizarResultado(cardsContainer, r) {
-    cardsContainer.innerHTML = gerarCard(r);
-    configurarCopiar();
+  cardsContainer.innerHTML = gerarCard(r);
+  configurarCopiar();
 }
 // Chamadas ao backend
 async function classificarPorTexto(texto) {
-    const resp = await fetch(`${API_BASE}/classificar`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ texto }),
-    });
-    if (resp.status === 422) {
-        // FastAPI geralmente manda {"detail": ...} mas pode variar
-        const data = await resp.json().catch(() => null);
-        throw new Error((data === null || data === void 0 ? void 0 : data.detail)
-            ? "Texto inválido. Verifique se não está vazio."
-            : "Texto inválido.");
-    }
-    if (!resp.ok) {
-        throw new Error(`Erro no servidor (${resp.status}).`);
-    }
-    return (await resp.json());
+  const resp = await fetch(`${API_BASE}/classificar`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ texto }),
+  });
+  if (resp.status === 422) {
+    // FastAPI geralmente manda {"detail": ...} mas pode variar
+    const data = await resp.json().catch(() => null);
+    throw new Error(
+      (data === null || data === void 0 ? void 0 : data.detail)
+        ? "Texto inválido. Verifique se não está vazio."
+        : "Texto inválido.",
+    );
+  }
+  if (!resp.ok) {
+    throw new Error(`Erro no servidor (${resp.status}).`);
+  }
+  return await resp.json();
 }
 async function classificarPorArquivo(file) {
-    const formData = new FormData();
-    formData.append("file", file);
-    const resp = await fetch(`${API_BASE}/classificar/arquivo`, {
-        method: "POST",
-        body: formData,
-    });
-    if (resp.status === 415) {
-        throw new Error("Tipo de arquivo não suportado. Envie .txt ou .pdf.");
-    }
-    if (resp.status === 422) {
-        const data = await resp.json().catch(() => null);
-        const detail = (data === null || data === void 0 ? void 0 : data.detail) ? String(data.detail) : "Arquivo inválido.";
-        throw new Error(detail);
-    }
-    if (!resp.ok) {
-        throw new Error(`Erro no servidor (${resp.status}).`);
-    }
-    return (await resp.json());
+  const formData = new FormData();
+  formData.append("file", file);
+  const resp = await fetch(`${API_BASE}/classificar/arquivo`, {
+    method: "POST",
+    body: formData,
+  });
+  if (resp.status === 415) {
+    throw new Error("Tipo de arquivo não suportado. Envie .txt ou .pdf.");
+  }
+  if (resp.status === 422) {
+    const data = await resp.json().catch(() => null);
+    const detail = (data === null || data === void 0 ? void 0 : data.detail)
+      ? String(data.detail)
+      : "Arquivo inválido.";
+    throw new Error(detail);
+  }
+  if (!resp.ok) {
+    throw new Error(`Erro no servidor (${resp.status}).`);
+  }
+  return await resp.json();
 }
 // Inicialização segura
 function init() {
-    const fileInput = document.getElementById("emailFile");
-    const textarea = document.getElementById("body_email");
-    const form = document.querySelector("form");
-    const cardsContainer = document.getElementById("cards");
-    const botaoTeste = document.getElementById("testarCards");
-    const botaoCancelarArquivo = document.getElementById("cancelarArquivo");
-    // Se algum elemento principal não existir, não quebra a página
-    if (!fileInput ||
-        !textarea ||
-        !form ||
-        !cardsContainer ||
-        !botaoCancelarArquivo) {
-        console.error("HTML não contém todos os elementos esperados. IDs conferem?");
-        console.error({
-            fileInput,
-            textarea,
-            form,
-            cardsContainer,
-            botaoCancelarArquivo,
-            botaoTeste,
-        });
+  const fileInput = document.getElementById("emailFile");
+  const textarea = document.getElementById("body_email");
+  const form = document.querySelector("form");
+  const cardsContainer = document.getElementById("cards");
+  const botaoTeste = document.getElementById("testarCards");
+  const botaoCancelarArquivo = document.getElementById("cancelarArquivo");
+  // Se algum elemento principal não existir, não quebra a página
+  if (
+    !fileInput ||
+    !textarea ||
+    !form ||
+    !cardsContainer ||
+    !botaoCancelarArquivo
+  ) {
+    console.error(
+      "HTML não contém todos os elementos esperados. IDs conferem?",
+    );
+    console.error({
+      fileInput,
+      textarea,
+      form,
+      cardsContainer,
+      botaoCancelarArquivo,
+      botaoTeste,
+    });
+    return;
+  }
+  // UX: controle arquivo ↔ texto
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files && fileInput.files.length > 0) {
+      textarea.value = "";
+      textarea.disabled = true;
+      botaoCancelarArquivo.style.display = "inline-block";
+    }
+  });
+  textarea.addEventListener("input", () => {
+    if (textarea.value.trim()) {
+      fileInput.value = "";
+      botaoCancelarArquivo.style.display = "none";
+      textarea.disabled = false;
+    }
+  });
+  botaoCancelarArquivo.addEventListener("click", () => {
+    fileInput.value = "";
+    textarea.disabled = false;
+    botaoCancelarArquivo.style.display = "none";
+  });
+  // Submit (3 cases)
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      renderizarLoading(cardsContainer);
+      // 1) textarea
+      const texto = textarea.value.trim();
+      if (texto) {
+        const resultado = await classificarPorTexto(texto);
+        renderizarResultado(cardsContainer, resultado);
         return;
+      }
+      // 2) arquivo (txt/pdf)
+      if (!fileInput.files || fileInput.files.length === 0) {
+        renderizarErro(
+          cardsContainer,
+          "Envie um arquivo (.txt/.pdf) ou cole o texto do email.",
+        );
+        return;
+      }
+      const arquivo = fileInput.files[0];
+      if (!arquivo) {
+        renderizarErro(cardsContainer, "Arquivo inválido. Tente novamente.");
+        return;
+      }
+      const resultado = await classificarPorArquivo(arquivo);
+      renderizarResultado(cardsContainer, resultado);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro desconhecido.";
+      renderizarErro(cardsContainer, msg);
     }
-    // UX: controle arquivo ↔ texto
-    fileInput.addEventListener("change", () => {
-        if (fileInput.files && fileInput.files.length > 0) {
-            textarea.value = "";
-            textarea.disabled = true;
-            botaoCancelarArquivo.style.display = "inline-block";
-        }
+  });
+  // Botão de teste (BACKEND REAL)
+  if (botaoTeste) {
+    botaoTeste.addEventListener("click", async () => {
+      try {
+        renderizarLoading(cardsContainer);
+        const resultado = await classificarPorTexto(
+          "Estou com erro no sistema e preciso de suporte urgente.",
+        );
+        renderizarResultado(cardsContainer, resultado);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Erro desconhecido.";
+        renderizarErro(cardsContainer, msg);
+      }
     });
-    textarea.addEventListener("input", () => {
-        if (textarea.value.trim()) {
-            fileInput.value = "";
-            botaoCancelarArquivo.style.display = "none";
-            textarea.disabled = false;
-        }
-    });
-    botaoCancelarArquivo.addEventListener("click", () => {
-        fileInput.value = "";
-        textarea.disabled = false;
-        botaoCancelarArquivo.style.display = "none";
-    });
-    // Submit (3 cases)
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        try {
-            renderizarLoading(cardsContainer);
-            // 1) textarea
-            const texto = textarea.value.trim();
-            if (texto) {
-                const resultado = await classificarPorTexto(texto);
-                renderizarResultado(cardsContainer, resultado);
-                return;
-            }
-            // 2) arquivo (txt/pdf)
-            if (!fileInput.files || fileInput.files.length === 0) {
-                renderizarErro(cardsContainer, "Envie um arquivo (.txt/.pdf) ou cole o texto do email.");
-                return;
-            }
-            const arquivo = fileInput.files[0];
-            if (!arquivo) {
-                renderizarErro(cardsContainer, "Arquivo inválido. Tente novamente.");
-                return;
-            }
-            const resultado = await classificarPorArquivo(arquivo);
-            renderizarResultado(cardsContainer, resultado);
-        }
-        catch (err) {
-            const msg = err instanceof Error ? err.message : "Erro desconhecido.";
-            renderizarErro(cardsContainer, msg);
-        }
-    });
-    // Botão de teste (BACKEND REAL)
-    if (botaoTeste) {
-        botaoTeste.addEventListener("click", async () => {
-            try {
-                renderizarLoading(cardsContainer);
-                const resultado = await classificarPorTexto("Estou com erro no sistema e preciso de suporte urgente.");
-                renderizarResultado(cardsContainer, resultado);
-            }
-            catch (err) {
-                const msg = err instanceof Error ? err.message : "Erro desconhecido.";
-                renderizarErro(cardsContainer, msg);
-            }
-        });
-    }
+  }
 }
 init();
 //# sourceMappingURL=email-classifier.js.map
