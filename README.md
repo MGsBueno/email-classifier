@@ -29,3 +29,12 @@ pip install -r requirements.txt
 
 uvicorn app.main:app --reload
 ```
+
+## Compilação TypeScript
+
+Para compilar os arquivos TypeScript:
+
+```bash
+cd frontend
+npm install
+npx tsc
